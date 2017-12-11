@@ -52,7 +52,7 @@ class MysqlConnectorCConan(ConanFile):
         self.copy(pattern="*.dylib", dst="lib", src="package/lib", keep_path=False)
 
     def package_info(self):
-        if self.options.shared:
+        if self.settings.compiler == "Visual Studio" and self.options.shared:
             self.cpp_info.libs = ["libmysql"]
         else:
             self.cpp_info.libs = ["mysqlclient"]
