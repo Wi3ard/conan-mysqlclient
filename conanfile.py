@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, CMake, tools
-import os
+import os, shutil
 
 class MysqlConnectorCConan(ConanFile):
     name = "mysql-connector-c"
@@ -12,7 +12,7 @@ class MysqlConnectorCConan(ConanFile):
     license = "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
     author = "Alex Kucher (a.kucher@avantize.com)"
     generators = "cmake", "txt"
-    exports_sources = ["CMakeLists.txt", "FindMySQL.cmake"]
+    exports_sources = ["CMakeLists.txt"]
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
     default_options = "shared=False"
@@ -22,6 +22,8 @@ class MysqlConnectorCConan(ConanFile):
         tools.get("{0}/mysql-connector-c-{1}-src.tar.gz".format(source_url, self.version))
         extracted_dir = self.name + "-" + self.version + "-src"
         os.rename(extracted_dir, "sources")
+        shutil.move("sources/CMakeLists.txt", "sources/CMakeListsOriginal.cmake")
+        shutil.copy("CMakeLists.txt", "sources/CMakeLists.txt")
 
     def build(self):
         cmake = CMake(self)
