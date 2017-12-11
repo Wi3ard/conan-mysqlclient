@@ -1,9 +1,8 @@
-PROJECT(MySQLClientTestVersion)
-cmake_minimum_required(VERSION 2.8)
+project(test_package)
+cmake_minimum_required(VERSION 2.8.11)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-CONAN_BASIC_SETUP()
+conan_basic_setup()
 
-ADD_EXECUTABLE(version version.cpp)
-target_link_libraries (version ${CONAN_LIBS})
+add_executable(${PROJECT_NAME} test_package.cpp)
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})

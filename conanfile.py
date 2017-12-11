@@ -1,69 +1,58 @@
-from conans import ConanFile, CMake
-from conans.tools import download, unzip
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-import os, shutil
+from conans import ConanFile, CMake, tools
+import os
 
-class MySQLClientConan(ConanFile):
-    name = "MySQLClient"
-    version = "6.1.6"
-    settings = "os", "compiler", "build_type", "arch"
-    url = "https://github.com/hklabbers/conan-mysqlclient.git"
-    license = "GPL v2"
-    author = "Hans Klabbers (hklabbers@yahoo.com)"
-    generators = "cmake"
-    exports = "CMakeLists.txt", "FindMySQL.cmake"
+class MysqlConnectorCConan(ConanFile):
+    name = "mysql-connector-c"
+    version = "6.1.11"
+    url = "https://github.com/Wi3ard/conan-mysqlclient"
+    description = "Connector/C (libmysqlclient) is a MySQL client library for C development."
+    license = "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+    author = "Alex Kucher (a.kucher@avantize.com)"
+    generators = "cmake", "txt"
+    exports_sources = ["CMakeLists.txt", "FindMySQL.cmake"]
+    settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
     default_options = "shared=False"
 
-    def config(self):
-        if not hasattr(self, "_count_configs"):
-            self._count_configs = 1
-            return
-        if self.settings.compiler == "Visual Studio" and not self.options.shared:
-            if "MD" in str(self.settings.compiler.runtime):
-                raise Exception("Cannot use MD in mysql static library, use MT")
-            elif self.settings.compiler.version != 12:
-                raise Exception("MySQLClient static library will not work with VS versions != 12")
-
     def source(self):
-        tar_file = "mysql-connector-c-%s-src.tar.gz" % self.version 
-        download("http://dev.mysql.com/get/Downloads/Connector-C/%s" % tar_file, tar_file)
-        unzip(tar_file)
-        shutil.move("mysql-connector-c-%s-src" % self.version, "mysqlclient")
-        os.unlink(tar_file)
-        shutil.move("mysqlclient/CMakeLists.txt", "mysqlclient/CMakeListsOriginal.cmake")
-        shutil.move("CMakeLists.txt", "mysqlclient/CMakeLists.txt")
+        source_url = "http://dev.mysql.com/get/Downloads/Connector-C/"
+        tools.get("{0}/mysql-connector-c-{1}-src.tar.gz".format(source_url, self.version))
+        extracted_dir = self.name + "-" + self.version + "-src"
+        os.rename(extracted_dir, "sources")
 
     def build(self):
-        if self.settings.compiler == "Visual Studio" and self.settings.compiler.version != 12:
-            self.settings.compiler.version = 12
-        cmake = CMake(self.settings)
-        self.run('cd mysqlclient && mkdir build && cd build && cmake .. %s' % cmake.command_line)
-        self.run("cd mysqlclient/build && cmake --build . %s" % cmake.build_config)
+        cmake = CMake(self)
+
+        cmake.definitions["CMAKE_INSTALL_PREFIX"] = "package"
+
+        if self.options.shared:
+            cmake.definitions["DISABLE_SHARED"] = "OFF"
+            cmake.definitions["DISABLE_STATIC"] = "ON"
+        else:
+            cmake.definitions["DISABLE_SHARED"] = "ON"
+            cmake.definitions["DISABLE_STATIC"] = "OFF"
+
+        if self.settings.compiler == "Visual Studio":
+            if self.settings.compiler.runtime == "MD" or self.settings.compiler.runtime == "MDd":
+                cmake.definitions["WINDOWS_RUNTIME_MD"] = "ON"
+
+        cmake.configure(source_dir="sources")
+        cmake.build()
+        cmake.install()
 
     def package(self):
-        # Copy findMySQL.cmake to package
-        self.copy("FindMySQL.cmake", ".", ".")
-        
-        self.copy("*.h", dst="include", src="mysqlclient/include")
-        self.copy("*.h", dst="include", src="mysqlclient/build/include")
-        if self.options.shared:
-            self.copy("*.so", dst="lib", src="mysqlclient/build", keep_path=False)  
-            self.copy("*mysql.lib", dst="lib", src="mysqlclient/build", keep_path=False)  
-            self.copy("*.dll", dst="bin", src="mysqlclient/build", keep_path=False)
-            self.copy("*.dylib", dst="lib", src="mysqlclient/build", keep_path=False)
-        else:
-            self.copy("*.lib", dst="lib", src="mysqlclient/build", keep_path=False)
-            self.copy("*.a", dst="lib", src="mysqlclient/build", keep_path=False)
+        self.copy(pattern="*", dst="include", src="package/include")
+        self.copy(pattern="*.dll", dst="bin", src="package/lib", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", src="package/lib", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", src="package/lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", src="package/lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", src="package/lib", keep_path=False)
 
     def package_info(self):
-        if self.settings.os == "Windows" and self.options.shared:
+        if self.options.shared:
             self.cpp_info.libs = ["libmysql"]
         else:
             self.cpp_info.libs = ["mysqlclient"]
-        if self.settings.os == "Linux" and not self.options.shared:
-            self.cpp_info.libs.extend(["dl", "pthread"])
-
-    def conan_info(self):
-        if self.info.settings.compiler == "Visual Studio":
-            self.info.settings.compiler.version = 12
