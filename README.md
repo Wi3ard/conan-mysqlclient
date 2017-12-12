@@ -2,6 +2,12 @@
 [![Build Status](https://api.travis-ci.org/Wi3ard/mysql-connector-c.svg?branch=release%2F6.1.11)](https://travis-ci.org/Wi3ard/mysql-connector-c)
 [![Build status](https://ci.appveyor.com/api/projects/status/wxnsuv71wxx86wgk?svg=true)](https://ci.appveyor.com/project/Wi3ard/conan-mysqlclient)
 
+---
+
+**This repository moved. Please use the new [location](https://github.com/bincrafters/conan-mysql-connector-c)**
+
+---
+
 [Conan.io](https://conan.io) package for [MySQL Connector/C](https://dev.mysql.com/downloads/connector/c/) project
 
 The packages generated with this **conanfile** can be found in [Bintray](https://bintray.com/bincrafters/public-conan/mysql-connector-c%3Abincrafters).
