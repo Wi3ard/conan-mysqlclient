@@ -11,3 +11,7 @@ conan_check_compiler()
 conan_flags_setup()
 
 include("CMakeListsOriginal.cmake")
+
+# -Werror causes build error with GCC 6.3/x86.
+string(REPLACE " -Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REPLACE " -Werror" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
