@@ -13,5 +13,7 @@ conan_flags_setup()
 include("CMakeListsOriginal.cmake")
 
 # Turn off -Werror in GCC debug builds.
-target_compile_options(mysys
-    PUBLIC -Wno-error)
+if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_COMPILER_IS_GNUCXX)
+    target_compile_options(mysys
+	PUBLIC -Wno-error)
+endif()
